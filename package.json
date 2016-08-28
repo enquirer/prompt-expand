@@ -1,0 +1,54 @@
+{
+  "name": "enquirer-prompt-expand",
+  "description": "Expand prompt plugin for Enquirer.",
+  "version": "0.1.0",
+  "homepage": "https://github.com/jonschlinkert/enquirer-prompt-expand",
+  "author": "Jon Schlinkert (https://github.com/jonschlinkert)",
+  "repository": "jonschlinkert/enquirer-prompt-expand",
+  "bugs": {
+    "url": "https://github.com/jonschlinkert/enquirer-prompt-expand/issues"
+  },
+  "license": "MIT",
+  "files": [
+    "index.js",
+    "LICENSE",
+    "README.md"
+  ],
+  "main": "index.js",
+  "engines": {
+    "node": ">=0.10.0"
+  },
+  "scripts": {
+    "test": "mocha"
+  },
+  "keywords": [
+    "answer",
+    "answers",
+    "ask",
+    "checkbox",
+    "choice",
+    "cli",
+    "command",
+    "expand",
+    "enquirerprompt",
+    "input",
+    "inquire",
+    "inquirer",
+    "interact",
+    "list",
+    "menu",
+    "password",
+    "prompt",
+    "prompts",
+    "question",
+    "readline",
+    "stdin",
+    "stdout",
+    "terminal",
+    "tty",
+    "ui"
+  ],
+  "dependencies": {
+    "log-utils": "^0.2.1"
+  }
+}
