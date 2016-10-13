@@ -4,22 +4,22 @@
 
 var util = require('util');
 var Paginator = require('terminal-paginator');
-var BasePrompt = require('enquirer-prompt');
+var Prompt = require('prompt-base');
 var log = require('log-utils');
 
 /**
  * Constructor
  */
 
-function Prompt(/*question, answers, rl*/) {
-  BasePrompt.apply(this, arguments);
+function Expand(/*question, answers, ui*/) {
+  Prompt.apply(this, arguments);
 
-  if (!this.question.choices) {
-    throw new TypeError('expected "options.choices" to be an array');
+  if (!this.choices) {
+    throw new TypeError('expected "options.choices" to be an object or array');
   }
 
   this.keymap = {};
-  this.validateChoices(this.question.choices.all);
+  this.validateChoices(this.choices);
   var help = {
     key: 'h',
     name: 'Help, list all options',
@@ -27,56 +27,78 @@ function Prompt(/*question, answers, rl*/) {
   };
 
   // Add the default `help` (/expand) option
-  this.question.choices.push(help);
-  this.keymap.h = help;
+  this.choices.items.push(help);
+  var keymap = this.keymap;
+  keymap.h = help;
 
-  this.question.validate = function(choice) {
+  this.question.validate = function(line) {
+    var choice = keymap[line];
     if (choice == null) {
       return 'Please enter a valid command';
     }
-    return choice !== 'help';
+    // no error
+    return false;
   };
 
   // Create the `default` string (capitalizes the default key)
   this.question.default = this.createShortcuts();
-  this.paginator = new Paginator();
+  this.choices.options.symbol = '';
+  this.choices.options.format = function() {
+    var val = this.key + ') ' + this.name;
+    if (this.key === this.position) {
+      val = log.cyan(val);
+    }
+    return val;
+  };
+
+  this.paginator = new Paginator(this.options.pageSize);
 }
 
 /**
  * Inherit `Base` prompt module
  */
 
-util.inherits(Prompt, BasePrompt);
+util.inherits(Expand, Prompt);
 
 /**
- * Start the prompt session
- * @param  {Function} `cb` Callback when prompt is finished
+ * Start the prompt
+ * @param  {Function} `cb` Callback to call with the answer when the answer is submitted.
  * @return {Object} Returns the `Prompt` instance
+ * @api public
  */
 
-Prompt.prototype.ask = function(cb) {
-  var self = this;
+Expand.prototype.ask = function(cb) {
   this.callback = cb;
-
-  this.ui.on('line', function(e) {
-    var event = self.getCurrentValue(e);
-    if (event.value === 'help' || event.error) {
-      self.onError(event);
-    } else {
-      self.onSubmit(event);
-    }
-  });
-
+  this.ui.on('line', this.onSubmit.bind(this));
   this.ui.on('keypress', this.onKeypress.bind(this));
   this.render();
   return this;
 };
 
 /**
+ * Get the current value based on user input.
+ *
+ * @param {String} `input`
+ * @return {Object}
+ */
+
+Expand.prototype.getCurrentValue = function(event) {
+  var input = event.key.name;
+  if (!input) input = this.rawDefault;
+  var key = input.toLowerCase().trim();
+  var val = this.keymap[key];
+  if (!val) {
+    var error = this.question.validate(key);
+    return {error: error, value: null};
+  }
+  return val;
+};
+
+/**
  * Render the prompt to the terminal
  */
 
-Prompt.prototype.render = function(error, hint) {
+Expand.prototype.render = function(error, hint) {
   var message = this.message;
   var append = '';
 
@@ -85,8 +107,8 @@ Prompt.prototype.render = function(error, hint) {
   }
 
   if (this.status === 'expanded') {
-    var choicesStr = renderChoices(this.question.choices, this.selectedKey);
-    message += this.paginator.paginate(choicesStr, this.selectedKey, this.question.pageSize);
+    var choicesStr = '\n' + this.choices.render(this.position);
+    message += this.paginator.paginate(choicesStr, this.position);
     message += '\n  Answer: ';
   }
 
@@ -101,61 +123,63 @@ Prompt.prototype.render = function(error, hint) {
   this.ui.render(message, append);
 };
 
-Prompt.prototype.onError = function(state) {
-  if (state.value === 'help') {
-    this.selectedKey = '';
+/**
+ * When the answer is submitted (user presses `enter` key), re-render
+ * and pass answer to callback.
+ *
+ * @param {Object} `event`
+ */
+
+Expand.prototype.onSubmit = function(line) {
+  var error = this.question.validate(line);
+  if (error) {
+    return this.onError(error);
+  }
+
+  var choice = this.keymap[line];
+  if (choice.value === 'help') {
     this.status = 'expanded';
     this.render();
     return;
   }
-  this.render(state.error);
-};
 
-/**
- * When user press `enter` key
- */
-
-Prompt.prototype.onSubmit = function(state) {
   this.status = 'answered';
-  var choice = this.keymap[state.key];
-  this.answer = choice.short || choice.name;
-
-  // Re-render prompt
-  this.render();
-  this.ui.write();
-  this.callback(state.value);
+  this.answer = choice.value;
+  this.submitAnswer();
 };
 
 /**
- * When user press a key
+ * When the user presses a key.
  */
 
-Prompt.prototype.onKeypress = function(e) {
-  this.selectedKey = this.rl.line.toLowerCase();
-  var selected = this.keymap[this.selectedKey];
-  if (this.status === 'expanded') {
-    this.render();
+Expand.prototype.onKeypress = function(e) {
+  var event = this.getCurrentValue(e);
+  if (event && event.error) {
+    this.onError(event.error);
     return;
   }
+
+  this.position = this.rl.line.toLowerCase();
+  var selected = this.keymap[this.position];
   this.render(null, selected ? selected.name : null);
 };
 
 /**
- * Get the current value based on user input.
- *
- * @param {String} `input`
- * @return {Object}
+ * Handle error events
+ * @param {Object} `event`
  */
 
-Prompt.prototype.getCurrentValue = function(input) {
-  if (!input) input = this.rawDefault;
-  var key = input.toLowerCase().trim();
-  var val = this.keymap[key];
-  if (!val) {
-    var error = this.question.validate(val);
-    return {error: error, value: null};
-  }
-  return val;
+Expand.prototype.onHelp = function(event) {
+  this.render(event.help);
+};
+
+/**
+ * Handle error events
+ * @param {Object} `event`
+ */
+
+Expand.prototype.onError = function(error) {
+  this.render(error);
 };
 
 /**
@@ -163,12 +187,12 @@ Prompt.prototype.getCurrentValue = function(input) {
  * @param {Array} `choices`
  */
 
-Prompt.prototype.validateChoices = function(choices) {
-  var len = choices.length;
+Expand.prototype.validateChoices = function(choices) {
+  var len = choices.items.length;
   var idx = -1;
 
   while (++idx < len) {
-    var choice = choices[idx];
+    var choice = choices.items[idx];
     if (choice.type === 'separator') {
       continue;
     }
@@ -191,45 +215,17 @@ Prompt.prototype.validateChoices = function(choices) {
  * @return {String} The created shortcut string
  */
 
-Prompt.prototype.createShortcuts = function() {
+Expand.prototype.createShortcuts = function() {
   var key = this.question.default || 0;
-  var choice = this.question.choices.getChoice(key);
-  var shortcuts = this.question.choices.pluck('key');
-  var idx = shortcuts.indexOf(choice.key);
-  this.rawDefault = choice.key;
+  var shortcuts = this.choices.pluck('key');
+  var idx = shortcuts.indexOf(key);
+  this.rawDefault = key;
   shortcuts[idx] = String(shortcuts[idx]).toUpperCase();
   return shortcuts.join('');
 };
 
 /**
- * Function for rendering checkbox choices
- * @param  {String} pointer Selected key
- * @return {String} Rendered content
- */
-
-function renderChoices(choices, selectedKey) {
-  var str = '';
-
-  choices.forEach(function(choice) {
-    str += '\n  ';
-
-    if (choice.type === 'separator') {
-      str += ' ' + choice;
-      return;
-    }
-
-    var val = choice.key + ') ' + choice.name;
-    if (selectedKey === choice.key) {
-      val = log.cyan(val);
-    }
-    str += val;
-  });
-
-  return str;
-}
-
-/**
  * Module exports
  */
 
-module.exports = Prompt;
+module.exports = Expand;
