@@ -20,13 +20,12 @@
     "test": "mocha"
   },
   "dependencies": {
-    "log-utils": "^0.2.1",
-    "prompt-base": "^0.5.0",
-    "terminal-paginator": "^0.2.1"
+    "ansi-colors": "^0.2.0",
+    "prompt-rawlist": "^2.0.0"
   },
   "devDependencies": {
-    "enquirer": "^0.3.1",
-    "gulp-format-md": "^0.1.11"
+    "enquirer": "^0.4.1",
+    "gulp-format-md": "^0.1.12"
   },
   "keywords": [
     "answer",
