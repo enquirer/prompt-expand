@@ -76,11 +76,6 @@
         "prompt-radio"
       ]
     },
-    "reflinks": [
-      "enquirer",
-      "verb",
-      "verb-generate-readme"
-    ],
     "lint": {
       "reflinks": true
     }
