@@ -36,9 +36,9 @@ var questions = [
 ];
 
 enquirer.ask(questions)
-  .then(function (answers) {
+  .then(function(answers) {
     console.log(answers);
   })
-  .catch(function (err) {
+  .catch(function(err) {
     console.log(err);
   });
