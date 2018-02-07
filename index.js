@@ -150,7 +150,7 @@ Expand.prototype.getAnswer = function(input, key) {
 };
 
 Expand.prototype.renderAnswer = function() {
-  return this.answer ? colors.cyan(this.answer.name) : null;
+  return this.answer ? colors.cyan(this.answer) : null;
 };
 
 function identity(pos) {
