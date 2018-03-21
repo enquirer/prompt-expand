@@ -3,6 +3,8 @@ var enquirer = new Enquirer();
 
 enquirer.register('expand', require('..'));
 
+(async function() {
+
 var questions = [
   {
     type: 'expand',
@@ -35,10 +37,7 @@ var questions = [
   }
 ];
 
-enquirer.ask(questions)
-  .then(function(answers) {
-    console.log(answers);
-  })
-  .catch(function(err) {
-    console.log(err);
-  });
+const answer = await enquirer.ask(questions).catch(console.error);
+console.log(answer);
+
+})();

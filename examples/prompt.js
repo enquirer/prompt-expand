@@ -6,31 +6,59 @@ var prompt = new Prompt({
   choices: [
     {
       key: 'y',
-      name: 'Overwrite',
-      value: 'overwrite'
+      name: 'Yes, overwrite this file',
+      value: 'Overwrite'
     },
     {
       key: 'a',
-      name: 'Overwrite this one and all next',
-      value: 'overwrite_all'
+      name: 'Overwrite this file and all remaining files',
+      value: 'Overwrite All'
     },
     {
-      key: 'd',
-      name: 'Show diff',
-      value: 'diff'
+      key: 'n',
+      name: 'No, do not overwrite this file',
+      value: 'No'
     },
-    new Prompt.Separator(),
     {
       key: 'x',
       name: 'Abort',
-      value: 'abort'
+      value: 'Abort'
+    },
+    {
+      key: 'd',
+      name: 'Show the difference between the existing and the new',
+      value: 'Diff'
     }
   ]
+  // choices: [
+  //   {
+  //     key: 'y',
+  //     name: 'Overwrite',
+  //     value: 'overwrite'
+  //   },
+  //   {
+  //     key: 'a',
+  //     name: 'Overwrite this one and all next',
+  //     value: 'overwrite_all'
+  //   },
+  //   {
+  //     key: 'd',
+  //     name: 'Show diff',
+  //     value: 'diff'
+  //   },
+  //   new Prompt.Separator(),
+  //   {
+  //     key: 'x',
+  //     name: 'Abort',
+  //     value: 'abort'
+  //   }
+  // ]
 });
 
-prompt.run()
+prompt
+  .run()
   .then(function(answer) {
-    console.log({file: answer});
+    console.log({ file: answer });
   })
   .catch(function(err) {
     console.log(err);
