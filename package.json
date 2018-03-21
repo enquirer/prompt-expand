@@ -1,7 +1,7 @@
 {
   "name": "prompt-expand",
   "description": "Expand prompt. Can be used as a standalone prompt, or with a prompt system like [Enquirer].",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "homepage": "https://github.com/enquirer/prompt-expand",
   "author": "Jon Schlinkert (https://github.com/jonschlinkert)",
   "repository": "enquirer/prompt-expand",
@@ -14,18 +14,18 @@
   ],
   "main": "index.js",
   "engines": {
-    "node": ">=0.10.0"
+    "node": ">=6"
   },
   "scripts": {
     "test": "mocha"
   },
   "dependencies": {
-    "ansi-colors": "^0.2.0",
-    "prompt-rawlist": "^2.0.0"
+    "ansi-colors": "^1.1.0",
+    "prompt-rawlist": "^2.0.1"
   },
   "devDependencies": {
-    "enquirer": "^0.4.1",
-    "gulp-format-md": "^0.1.12"
+    "enquirer": "^1.0.3",
+    "gulp-format-md": "^1.0.0"
   },
   "keywords": [
     "answer",
