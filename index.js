@@ -114,8 +114,8 @@ Expand.prototype.renderOutput = function() {
       msg += '\n  Answer: ' + this.rl.line;
       if (this.position === -1 && this.rl.line.trim() !== '') {
         msg += colors.red(' (invalid)');
+        this.rl.line = '';
       }
-      this.rl.line = '';
       return msg;
     case 'pending':
     case 'interacted':
