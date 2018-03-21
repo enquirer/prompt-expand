@@ -20,12 +20,10 @@ function Expand(/*question, answers, ui*/) {
     long: 'Help, list all options'
   });
 
-  this.initialDefault = this.question.default;
-  this.question.default = null;
+  this.initialDefault = this.options.default;
   this.firstSubmit = true;
 
   var keys = shortcuts(this.choices, this.initialDefault);
-
   this.keys = keys;
   this.charmap = keys.charmap;
   this.keymap = keys.keymap;
@@ -43,24 +41,35 @@ function Expand(/*question, answers, ui*/) {
     };
   }
 
+  this.choices.options.renderChoice = function(position, choice, options) {
+    let value = choice.value;
+    choice.value = choice.shortcut + ') ' + choice.name;
+    let line = choice.render(position, options);
+    choice.value = value;
+    return line;
+  };
+
   this.off('render');
   this.on('render', function(context) {
     var line = this.rl.line.trim();
-    if (!line || this.status === 'help') return;
-    var choice = this.getChoice(line, 'key');
+
+    if (!line || this.status === 'help') {
+      return;
+    }
+
+    var choice = this.getChoice(line, 'shortcut');
+    if (choice && choice.shortcut === 'h') {
+      this.status = 'help';
+      this.rl.line = '';
+      return;
+    }
+
     if (choice) {
-      this.initialDefault = null;
       context.message += colors.cyan('\n>> ') + choice.name;
     } else {
       this.status = 'pending';
     }
   });
-
-  this.choices.options.format = function(line) {
-    var choice = prompt.getChoice(line, 'value');
-    line = choice.shortcut + ') ' + choice.name;
-    return this.position === this.index ? colors.cyan(line) : line;
-  };
 }
 
 /**
@@ -108,12 +117,12 @@ Expand.prototype.renderOutput = function() {
   switch (this.status) {
     case 'help':
       this.initialDefault = null;
-
       var msg = '';
       msg += this.choices.render(this.position, this.question.options);
       msg += '\n  Answer: ' + this.rl.line;
-      if (this.position === -1 && this.rl.line.trim() !== '') {
+      if (this.position === -1 && line !== '') {
         msg += colors.red(' (invalid)');
+        this.status = 'invalid';
         this.rl.line = '';
       }
       return msg;
@@ -136,13 +145,14 @@ Expand.prototype.renderOutput = function() {
 Expand.prototype.getAnswer = function(input, key) {
   var val = key && key.name === 'line' && input.trim();
   var def = this.initialDefault;
-  this.initialDefault = null;
-  if (!val) {
-    val = def;
+
+  if (!val && def) {
+    var choice = this.getChoice(def, 'name');
+    return (this.answer = choice.value);
   }
 
   if (val) {
-    var name = this.charmap[val];
+    var name = this.charmap[val] || val;
     if (name != null) {
       return (this.answer = this.choices.get(name, 'value'));
     }
